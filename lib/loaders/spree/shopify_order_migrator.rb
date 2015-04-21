@@ -308,13 +308,18 @@ module DataShift
           load_object.shipments.first.shipped_at = load_object.completed_at
         end
 
-        load_object.payment_state = "paid"
-
+        load_object.payment_state = 'paid'
+        load_object.shipment_state = 'shipped'
         load_object.state = 'complete'
 
         logger.info("Order #{load_object.id}(#{load_object.number}) state set to 'complete' - Final Save")
 
         load_object.id = nil if(load_object.id == 0)   # why the hell is this 0 happening !?
+
+        # This sets updated_at before the final save so that external
+        # processes that rely upon updated_at don't become confused
+        # e.g. sending orders to fulfillment centers
+        load_object.updated_at = load_object.completed_at
 
         begin
           load_object.save!    # ok this Order done
