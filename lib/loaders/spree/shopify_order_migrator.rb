@@ -316,13 +316,13 @@ module DataShift
 
         load_object.id = nil if(load_object.id == 0)   # why the hell is this 0 happening !?
 
-        # This sets updated_at before the final save so that external
-        # processes that rely upon updated_at don't become confused
-        # e.g. sending orders to fulfillment centers
-        load_object.updated_at = load_object.completed_at
-
         begin
           load_object.save!    # ok this Order done
+
+          # This sets updated_at (without triggering automatic set of updated_at)
+          # so that external processes that rely upon updated_at don't become confused
+          # e.g. sending orders to fulfillment centers
+          load_object.update_column( 'updated_at', load_object.completed_at)
         rescue => x
           logger.error("Final Spree Order save failed : #{load_object.errors.full_messages.inspect}")
           puts x.inspect
